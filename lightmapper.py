@@ -107,45 +107,31 @@ def main(context):
         bpy.context.scene.render.bake.use_pass_transmission = True
         bpy.context.scene.render.bake.use_pass_emit = True
 
-    if not lmProps.onlySetup:
-        res = bpy.ops.object.bake('INVOKE_DEFAULT', save_mode='EXTERNAL')
-        if res != {'RUNNING_MODAL'}:
-            return {'FINISHED'}
-        return {'RUNNING_MODAL'}
+    if not lmProps.onlySetup:        
+        #imageName = selectedObj.name + '_Bake'
 
-def createBake(context):
-    global selectedObj
-    imageName = selectedObj.name + '_Bake'
+        #new_obj = selectedObj.copy()
+        #new_obj.name = selectedObj.name + '(BAKE)'
+        #new_obj.data = selectedObj.data.copy()
+        #new_obj.data.materials.clear()
+        
+        #mat_name = selectedObj.name+'Bake'
+        #mat = bpy.data.materials.get(mat_name)
+        #if mat is None:
+        #    mat = bpy.data.materials.new(name=mat_name)        
+        #new_obj.data.materials.append(mat)
+        
+        #nodeSetup(mat, imageName, lmProps, 0, True)
+        
+        #context.collection.objects.link(new_obj)
 
-    scene = context.scene
-    lmProps = scene.lightmapperProps
-
-    print('Creating new object')
-
-    print(imageName)
-
-    new_obj = selectedObj.copy()
-    new_obj.name = selectedObj.name + '(BAKE)'
-    new_obj.data = selectedObj.data.copy()
-    new_obj.data.materials.clear()
-
-    print(new_obj)
-    
-    mat_name = selectedObj.name+'Bake'
-    mat = bpy.data.materials.get(mat_name)
-    if mat is None:
-        mat = bpy.data.materials.new(name=mat_name)        
-    new_obj.data.materials.append(mat)
-    
-    nodeSetup(mat, imageName, lmProps, 0, True)
-    
-    context.collection.objects.link(new_obj)
-    
-    
-    selectedObj.hide_viewport = True
-    selectedObj.hide_render = True
-    
-    new_obj.select_set(True)
+        bpy.ops.object.bake('INVOKE_DEFAULT', save_mode='EXTERNAL')
+        
+        
+        #selectedObj.hide_viewport = True
+        #selectedObj.hide_render = True
+        
+        #new_obj.select_set(True)
 
 
 class LightmapperProps(bpy.types.PropertyGroup):
@@ -247,32 +233,9 @@ class LightmapOperator(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        res = main(context)
-        if res != {'RUNNING_MODAL'}:
-            return {'FINISHED'}
-        wm = context.window_manager
-        self._timer = wm.event_timer_add(0.5, window=context.window)
-        wm.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-    
-    def modal(self, context, event):
-        if event.type in {'RIGHTMOUSE', 'ESC'}:
-            self.cancel(context)
-            return {'CANCELLED'}
+        main(context)
+        return {'FINISHED'}
 
-        global image
-        if event.type == 'TIMER':
-            if image.is_dirty:
-                self.finish(context)
-                return {'FINISHED'}
-
-        return {'PASS_THROUGH'}
-    
-    def finish(self, context):
-        wm = context.window_manager
-        wm.event_timer_remove(self._timer)
-        createBake(context)
-        print('Bake done')
 
 
 def menu_func(self, context):
